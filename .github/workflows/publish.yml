@@ -1,0 +1,84 @@
+name: docker publish
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  build-amd64:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: setup buildx
+        uses: docker/setup-buildx-action@v3
+      - name: verify architecture
+        run: uname -m
+      - name: print available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      - name: set version from tag
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: print version number
+        run: echo ${{ env.RELEASE_VERSION }}
+      - name: login to dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: build & upload
+        run: |
+          docker buildx build \
+          --build-arg USD_VERSION=${{ env.RELEASE_VERSION }} \
+          --push \
+          --tag astrumforge/usd-base:v-${{ env.RELEASE_VERSION }}-amd64 \
+          --platform linux/amd64 \
+          --file Dockerfile .
+  build-arm64:
+    runs-on: macos-latest
+    timeout-minutes: 360
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: setup buildx
+        uses: docker/setup-buildx-action@v3
+      - name: verify architecture
+        run: uname -m
+      - name: print available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      - name: set version from tag
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: print version number
+        run: echo ${{ env.RELEASE_VERSION }}
+      - name: login to dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: build & upload
+        run: |
+          docker buildx build \
+          --build-arg USD_VERSION=${{ env.RELEASE_VERSION }} \
+          --push \
+          --tag astrumforge/usd-base:v-${{ env.RELEASE_VERSION }}-arm64 \
+          --platform linux/arm64 \
+          --file Dockerfile .
+  build-manifest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    needs: [build-amd64, build-arm64]
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: set version from tag
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: print version number
+        run: echo ${{ env.RELEASE_VERSION }}
+      - name: login to dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: create manifest
+        run: docker manifest create astrumforge/usd-base:v-${{ env.RELEASE_VERSION }} astrumforge/usd-base:v-${{ env.RELEASE_VERSION }}-amd64 astrumforge/usd-base:v-${{ env.RELEASE_VERSION }}-arm64
+      - name: upload manifest
+        run: docker manifest push astrumforge/usd-base:v-${{ env.RELEASE_VERSION }}
