@@ -8,14 +8,15 @@
 # For more details on the USD toolkit, visit:
 # https://github.com/PixarAnimationStudios/USD
 
-FROM python:3.13-slim-bookworm
+FROM astrumforge/bullseye-base:3.31.1
 
 LABEL MAINTAINER="Astrum Forge Studios (https://www.astrumforge.com)"
 
-# Allow specifying USD version at build-time:
+# Allow specifying USD version at build-time
 ARG USD_VERSION=24.11
 ENV USD_VERSION="${USD_VERSION}"
 
+# Set environment paths for USD
 ENV USD_BUILD_PATH="/usr/usd"
 ENV USD_PLUGIN_PATH="/usr/usd/plugin/usd"
 ENV USD_BIN_PATH="${USD_BUILD_PATH}/bin"
@@ -26,32 +27,34 @@ ENV PYTHONPATH="${PYTHONPATH}:${USD_LIB_PATH}/python"
 
 WORKDIR /usr
 
-# Install prerequisites for compiling USD
+# Install prerequisites, build USD, and clean up
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	git \
 	build-essential \
-	cmake \
 	nasm \
 	libxrandr-dev \
 	libxcursor-dev \
 	libxinerama-dev \
 	libxi-dev && \
-	rm -rf /var/lib/apt/lists/* && \
 	pip3 install -U Jinja2 argparse pillow numpy && \
+	# Clone the Pixar USD repository and build USD
 	git clone --branch "v${USD_VERSION}" --depth 1 https://github.com/PixarAnimationStudios/USD.git usdsrc && \
 	python3 usdsrc/build_scripts/build_usd.py --no-examples --no-tutorials --no-imaging --no-usdview ${USD_BUILD_PATH} && \
+	# Remove source and build artifacts
 	rm -rf usdsrc && \
 	rm -rf ${USD_BUILD_PATH}/build && \
 	rm -rf ${USD_BUILD_PATH}/cmake && \
 	rm -rf ${USD_BUILD_PATH}/pxrConfig.cmake && \
 	rm -rf ${USD_BUILD_PATH}/share && \
 	rm -rf ${USD_BUILD_PATH}/src && \
-	apt-get purge -y git \
+	# Remove development tools and dependencies
+	apt-get purge -y --auto-remove \
+	git \
 	build-essential \
-	cmake \
 	nasm \
 	libxrandr-dev \
+	libxcursor-dev \
 	libxinerama-dev \
 	libxi-dev && \
-	apt autoremove -y && \
-	apt-get autoclean -y
+	apt-get clean && \
+	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
