@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libxcursor-dev \
 	libxinerama-dev \
 	libxi-dev \
+	libxt-dev \
 	python3 \
 	python3-pip && \
 	pip3 install --no-cache-dir -U Jinja2 argparse pillow numpy && \
@@ -58,6 +59,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libxcursor-dev \
 	libxinerama-dev \
 	libxi-dev \
+	libxt-dev \
 	python3 \
 	python3-pip && \
 	apt-get clean && \
