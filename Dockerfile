@@ -1,14 +1,13 @@
 # Base Docker Image with a Precompiled Pixar USD Toolchain
 #
-# This Docker image provides a stable foundation that includes a fully precompiled
-# Pixar USD toolchain. Separating the USD build from other dependencies drastically
-# reduces rebuild times, as USD is complex and updated infrequently. Astrum Forge Studios
-# utilizes this base image across various open-source projects.
+# This Docker image demonstrates building Pixar USD from source and cleaning up
+# any downloaded source files and build-time dependencies, leaving a minimal image
+# containing only the installed USD toolkit.
 #
 # For more details on the USD toolkit, visit:
 # https://github.com/PixarAnimationStudios/USD
 
-FROM astrumforge/bullseye-base:3.31.1
+FROM astrumforge/bullseye-base:latest
 
 LABEL MAINTAINER="Astrum Forge Studios (https://www.astrumforge.com)"
 
@@ -27,7 +26,6 @@ ENV PYTHONPATH="${PYTHONPATH}:${USD_LIB_PATH}/python"
 
 WORKDIR /usr
 
-# Install prerequisites, build USD, and clean up
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	git \
 	build-essential \
@@ -35,19 +33,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libxrandr-dev \
 	libxcursor-dev \
 	libxinerama-dev \
-	libxi-dev && \
-	pip3 install -U Jinja2 argparse pillow numpy && \
-	# Clone the Pixar USD repository and build USD
+	libxi-dev \
+	python3 \
+	python3-pip && \
+	pip3 install --no-cache-dir -U Jinja2 argparse pillow numpy && \
+	# Clone the Pixar USD repository and build USD via python3 and pip3-installed dependencies
 	git clone --branch "v${USD_VERSION}" --depth 1 https://github.com/PixarAnimationStudios/USD.git usdsrc && \
 	python3 usdsrc/build_scripts/build_usd.py --no-examples --no-tutorials --no-imaging --no-usdview ${USD_BUILD_PATH} && \
-	# Remove source and build artifacts
+	# Remove source directories and intermediate build files
 	rm -rf usdsrc && \
 	rm -rf ${USD_BUILD_PATH}/build && \
 	rm -rf ${USD_BUILD_PATH}/cmake && \
 	rm -rf ${USD_BUILD_PATH}/pxrConfig.cmake && \
 	rm -rf ${USD_BUILD_PATH}/share && \
 	rm -rf ${USD_BUILD_PATH}/src && \
-	# Remove development tools and dependencies
+	# Uninstall Python packages that were only needed for building USD
+	pip3 uninstall -y Jinja2 pillow numpy && \
+	# Remove build dependencies
 	apt-get purge -y --auto-remove \
 	git \
 	build-essential \
@@ -55,6 +57,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libxrandr-dev \
 	libxcursor-dev \
 	libxinerama-dev \
-	libxi-dev && \
+	libxi-dev \
+	python3 \
+	python3-pip && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
