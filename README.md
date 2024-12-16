@@ -7,9 +7,16 @@ This repository provides a Docker base image with a precompiled Pixar USD toolch
 Use this image as a base for your projects to avoid compiling USD from scratch. The version tag corresponds to the matching USD release from Pixar:
 
 ```dockerfile
-FROM astrumforge/usd-base:v-24.11
+FROM astrumforge/usd-base:24.11
 ```
 
-For more details, visit the [Docker Hub Repository](https://hub.docker.com/r/astrumforge/usd-base).
+You can also use the `latest` tag to always pull the most recently published version:
 
-For additional information on Pixar USD, check out the [Pixar USD repository](https://github.com/PixarAnimationStudios/USD).
+```dockerfile
+FROM astrumforge/usd-base:latest
+```
+
+## Links
+
+- **Pixar USD Repository**: [Pixar USD repository](https://github.com/PixarAnimationStudios/USD) 
+- **Docker Repository**: [Docker Hub Repository](https://hub.docker.com/r/astrumforge/usd-base)
