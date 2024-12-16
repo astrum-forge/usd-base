@@ -34,13 +34,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libxcursor-dev \
 	libxinerama-dev \
 	libxi-dev \
-	libxt-dev \
 	python3 \
 	python3-pip && \
 	pip3 install --no-cache-dir -U Jinja2 argparse pillow numpy && \
 	# Clone the Pixar USD repository and build USD via python3 and pip3-installed dependencies
 	git clone --branch "v${USD_VERSION}" --depth 1 https://github.com/PixarAnimationStudios/USD.git usdsrc && \
-	python3 usdsrc/build_scripts/build_usd.py --no-examples --no-tutorials --no-imaging --no-usdview ${USD_BUILD_PATH} && \
+	python3 usdsrc/build_scripts/build_usd.py --no-examples --no-tutorials --no-imaging --no-usdview --no-draco --no-materialx ${USD_BUILD_PATH} && \
 	# Remove source directories and intermediate build files
 	rm -rf usdsrc && \
 	rm -rf ${USD_BUILD_PATH}/build && \
@@ -59,7 +58,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libxcursor-dev \
 	libxinerama-dev \
 	libxi-dev \
-	libxt-dev \
 	python3 \
 	python3-pip && \
 	apt-get clean && \
