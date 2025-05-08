@@ -56,11 +56,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	--draco \
 	--no-materialx \
 	${USD_BUILD_PATH} && \
-	# Clean up source and build artifacts
+	# Clean up source and build artifacts, preserving pxrConfig.cmake
 	rm -rf usdsrc \
 	${USD_BUILD_PATH}/build \
 	${USD_BUILD_PATH}/cmake \
-	${USD_BUILD_PATH}/pxrConfig.cmake \
 	${USD_BUILD_PATH}/share \
 	${USD_BUILD_PATH}/src && \
 	# Remove build dependencies and Python
